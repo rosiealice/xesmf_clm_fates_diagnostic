@@ -60,7 +60,7 @@ class XesmfCLMFatesDiagnostics:
         self.datapath = datapath
         self.weightfile = weightfile
         self.var_pams = read_pam_file(pamfile)
-        print(self.var_pams)
+        # print(self.var_pams)
         #sys.exit(4)
         self.filelist, self.ftype_name = self.get_clm_h0_filelist()
         self.filelist.sort()
@@ -81,7 +81,7 @@ class XesmfCLMFatesDiagnostics:
             print("Not all requested variables are available in output, ignoring these:")
             print(vars_missing)
         self.help_variables = list(set(help_variables) - set(vars_missing))
-        print(self.help_variables)
+        # print(self.help_variables)
         #sys.exit(4)
         #print(self.unit_dict)
         #sys.exit(4)
@@ -273,15 +273,17 @@ class XesmfCLMFatesDiagnostics:
         if varlist is None:
             varlist = self.var_pams["VAR_LIST_MAIN"]
         varlist_direct, varlist_composite = self.fix_varlists_for_composite_variables(varlist)
-        
-        
-        for year in year_range:
+        total_years = len(year_range)
+        print(f"Reading historical files (annual means): {total_years} years")
+
+        for year_idx, year in enumerate(year_range, start=1):
+            print(f"  annual read progress {year_idx}/{total_years}: year {year}")
             for month in range(12):
                 mfile = f"{self.datapath}/{self.casename}.{self.ftype_name}.{year:04d}-{month + 1:02d}.nc"
                 #print(varlist_direct)
                 #print(varlist_composite)
                 test = xr.open_dataset(mfile, engine="netcdf4")
-                print(test.keys())
+                # print(test.keys())
                 outd_here = xr.open_dataset(mfile, engine="netcdf4")[varlist_direct]
                 outd_here = self.add_composite_variables(outd_here, varlist_composite)
                 outd_here = multiply_by_fates_fraction(outd_here)
@@ -312,8 +314,11 @@ class XesmfCLMFatesDiagnostics:
         if varlist is None:
             varlist = self.var_pams["VAR_LIST_MAIN"]
         varlist_direct, varlist_composite = self.fix_varlists_for_composite_variables(varlist)
+        total_years = len(year_range)
+        print(f"Reading historical files (annual mean time series): {total_years} years")
 
-        for year in year_range:
+        for year_idx, year in enumerate(year_range, start=1):
+            print(f"  annual-ts read progress {year_idx}/{total_years}: year {year}")
             outd_yr = None
             for month in range(12):                         
                 mfile = f"{self.datapath}/{self.casename}.{self.ftype_name}.{year:04d}-{month + 1:02d}.nc"
@@ -398,8 +403,12 @@ class XesmfCLMFatesDiagnostics:
         if varlist is None:
             varlist = self.var_pams["VAR_LIST_MAIN"]
         varlist_direct, varlist_composite = self.fix_varlists_for_composite_variables(varlist)
-        
-        for year in year_range:
+        total_years = len(year_range)
+        season_name = SEASONS[season]
+        print(f"Reading historical files ({season_name} climatology): {total_years} years")
+
+        for year_idx, year in enumerate(year_range, start=1):
+            print(f"  {season_name} read progress {year_idx}/{total_years}: year {year}")
             for monthincr in range(3):
 
                 month = monthincr + season * 3
@@ -426,8 +435,11 @@ class XesmfCLMFatesDiagnostics:
         if varlist is None:
             varlist = self.var_pams["VAR_LIST_MAIN"]
         varlist_direct, varlist_composite = self.fix_varlists_for_composite_variables(varlist)
+        total_years = len(year_range)
+        print(f"Reading historical files (monthly climatology): 12 months across {total_years} years")
 
         for month in range(12):
+            print(f"  monthly climatology progress {month + 1}/12: month {month + 1:02d}")
             outd = None
             for year in year_range:
                 # print(f"Season: {season}, monthincr: {monthincr}, month: {monthincr}")
@@ -643,7 +655,7 @@ class XesmfCLMFatesDiagnostics:
     def get_year_ranges_for_comparison(self, other, year_range_in=None):
         year_range_avail = self.get_year_range(get_full_range=True)
         year_range_other_avail = other.get_year_range(get_full_range=True)
-        print(year_range_in)
+        # print(year_range_in)
         if year_range_in is None:
             year_range_in = {"compare_from_end":20}
         if "year_range" in year_range_in:
@@ -754,6 +766,7 @@ class XesmfCLMFatesDiagnostics:
                 cmap = "PuOr_r",
             )
             rmse, bias = calculate_rmse_from_bias(to_plot - to_plot_other)
+            print(f"Plotting figure: {season_name} {var} ({year_range_str})")
             fig.suptitle(f"{season_name} {var} ({self.unit_dict[var]}) (years {year_range_str})", size = "xx-large", y=0.8)
             fig.savefig(f"{fig_dir}/{self.casename}_compare_{other.casename}_{season_name}_{var}_{year_range_str}.png")
         if regridder_between is None:
@@ -881,9 +894,9 @@ class XesmfCLMFatesDiagnostics:
                 to_plot = unit_conversion_factor * to_plot 
                 to_plot_obs = to_plot_obs * landmask
 
-                print(to_plot)
-                print(outd[varname_mod])
-                print(varname_mod)
+                # print(to_plot)
+                # print(outd[varname_mod])
+                # print(varname_mod)
                 year_range_str = f"{year_range[0]:04d}-{year_range[-1]:04d}"
                 make_bias_plot(
                     to_plot,
@@ -914,7 +927,7 @@ class XesmfCLMFatesDiagnostics:
                 #rmse, bias = calculate_rmse_from_bias(to_plot - to_plot_obs)
                 test = calculate_rmse_from_bias(to_plot - to_plot_obs)
                 rmse, bias = test
-                print(rmse, bias)
+                print(f"Plotting figure: {season_name} {varname_mod} vs {obs_dataset} ({year_range_str})")
                 fig.suptitle(f"{season_name} {varname_mod} ({unit_to_print}) (years {year_range_str}), RMSE = {rmse:.2e}, Mean bias = {bias:.2e}", size = "xx-large", y=0.8)
                 fig.savefig(
                     f"{fig_dir}/{self.casename}_compare_{varname_mod}_{obs_dataset}_{season_name}_{year_range_str}.png"

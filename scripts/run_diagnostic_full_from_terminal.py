@@ -61,13 +61,13 @@ def print_help_message():
 
 def read_optional_arguments(arguments):
     run_dict = standard_run_dict.copy()
-    print(arguments)
+    # print(arguments)
     for arg in arguments:
-        print(arg)
+        # print(arg)
         arg_key = arg.split("=")[0] 
         arg_val = arg.split("=")[-1] 
-        print(arg_key)
-        print(arg_val)
+        # print(arg_key)
+        # print(arg_val)
         if arg_key in run_dict:
             if not os.path.exists(arg_val):
                 print(f"Invalid path {arg_val} for {arg_key} will be ignored")
@@ -124,7 +124,7 @@ if len(glob.glob(f"{run_path}*.nc")) < 1:
     print_help_message()
 
 ilamb_cfg = ilamb_configurations.IlambConfigurations("../tests/test-data/ilamb_CLMFATES.cfg")
-print(ilamb_cfg.configurations["FATES_FIRE_CLOSS"].obsdatasets)
+# print(ilamb_cfg.configurations["FATES_FIRE_CLOSS"].obsdatasets)
 #print(ilamb_cfg.configurations["pr"].obsdatasets)
 
 #sys.exit(4)
@@ -133,7 +133,7 @@ run_dict = read_optional_arguments(sys.argv[2:])
 #sys.exit(4)
 
 print(f"All set, setting up to run diagnostics on {run_path} using options:")
-print(run_dict)
+# print(run_dict)
 #sys.exit(4)
 
 diagnostic = XesmfCLMFatesDiagnostics(

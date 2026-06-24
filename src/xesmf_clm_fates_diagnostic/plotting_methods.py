@@ -55,8 +55,8 @@ def make_bias_plot(bias,figname,yminv=None,ymaxv=None,cmap = 'gist_earth',ax = N
         plottype='singleplot'
     else:
         plottype='multiplot'
-    print("in make bias plot", figname)
-    print(bias)
+    # print("in make bias plot", figname)
+    # print(bias)
 
     dims = list(bias.dims)
     if(len(dims) == 3):
@@ -217,7 +217,7 @@ def regrid_se_data(regridder, data_to_regrid, lndfrac=None, landmask=None):
     if isinstance(data_to_regrid, xr.DataArray):
         if lndfrac is not None:
             regridded = regridded/ regridded_landfrac
-            print(regridded)
+            # print(regridded)
         if landmask is not None:
             regridded = regridded * regridded_landmask
         return regridded, regridded_landmask

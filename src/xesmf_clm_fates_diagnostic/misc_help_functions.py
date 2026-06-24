@@ -137,26 +137,24 @@ def unit_convert_single_unit(unit_from, unit_to):
         to_prefix = UNIT_PREFIXES[just_string_to[0]]
     else:
         to_prefix = 0
-    print((multiplicator*10**((from_prefix-to_prefix)))**factor)
     return (multiplicator*10**((from_prefix-to_prefix)))**factor
 
 
-def get_unit_conversion_from_string(obs_unit, mod_unit):
-    if obs_unit is None or mod_unit is None:
-        print("Stopped on the None")
-        return 1, mod_unit
-    print(f"Coming in with obs: {obs_unit}  and mod: {mod_unit}")
-    obs_unit_parts = obs_unit.split()
-    mod_unit_parts = mod_unit.split()
-    if len(obs_unit_parts) != len(mod_unit_parts):
-        print("Units not directly compatible area weighting likely necessary, this is currently unimplemented")
-        return 1, mod_unit
+def get_unit_conversion_from_string(plot_unit, data_unit):
+    if plot_unit is None or data_unit is None:
+        return 1, data_unit
+    plot_unit_parts = plot_unit.split()
+    data_unit_parts = data_unit.split()
+    if len(plot_unit_parts) != len(data_unit_parts):
+        print(f"Unit mismatch (area weighting needed, unimplemented): plot unit={plot_unit!r}, data unit={data_unit!r}")
+        return 1, data_unit
     unit_conversion = 1
-    for partnum in range(len(obs_unit_parts)):
-        unit_conversion = unit_conversion*unit_convert_single_unit(mod_unit_parts[partnum], obs_unit_parts[partnum])
+    for partnum in range(len(plot_unit_parts)):
+        unit_conversion = unit_conversion*unit_convert_single_unit(data_unit_parts[partnum], plot_unit_parts[partnum])
     if unit_conversion == 1:
-        return unit_conversion, mod_unit
-    return unit_conversion, obs_unit
+        return unit_conversion, data_unit
+    print(f"Unit conversion applied: {data_unit!r} -> {plot_unit!r} (factor: {unit_conversion})")
+    return unit_conversion, plot_unit
 
 
 def make_regridding_target_from_weightfile(weight_file, filename_exmp):
