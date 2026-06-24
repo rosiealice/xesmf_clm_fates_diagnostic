@@ -165,6 +165,7 @@ if not run_dict["compare"] is None:
         run_dict['compare'],
         run_dict["compare_weight"],
         run_dict["pamfile"],
+        outdir = run_dict["outpath"],
     )
 
     diagnostic.make_combined_changeplots(diasgnostic_other, year_range_in=run_dict["year_range_compare"], ilamb_cfgs = ilamb_cfg)
