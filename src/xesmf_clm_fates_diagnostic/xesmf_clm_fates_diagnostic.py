@@ -47,7 +47,22 @@ def crop_variable_over_box(outd_regr, region_info):
     return crop
 
 help_variables = ["FATES_FRACTION", "landfrac", "area", "landmask"]
-    
+
+def get_file_timesteps(file):
+    """
+    Get the number of timesteps in a file
+
+    Parameters
+    ----------
+    file : str
+        Path to file
+
+    Returns
+    -------
+    int
+        Number of timesteps in the file
+    """
+    return xr.open_dataset(file).dims["time"]
 
 class XesmfCLMFatesDiagnostics:
     """
@@ -63,6 +78,7 @@ class XesmfCLMFatesDiagnostics:
         print(self.var_pams)
         #sys.exit(4)
         self.filelist, self.ftype_name = self.get_clm_h0_filelist()
+        self.numfile_timesteps = get_file_timesteps(self.filelist[0])
         self.filelist.sort()
         self.regridder = make_generic_regridder(self.weightfile, self.filelist[0])
         self.regrid_target = make_regridding_target_from_weightfile(self.weightfile, self.filelist[0])
@@ -276,22 +292,28 @@ class XesmfCLMFatesDiagnostics:
         
         
         for year in year_range:
-            for month in range(12):
-                mfile = f"{self.datapath}/{self.casename}.{self.ftype_name}.{year:04d}-{month + 1:02d}.nc"
-                #print(varlist_direct)
-                #print(varlist_composite)
-                test = xr.open_dataset(mfile, engine="netcdf4")
-                print(test.keys())
+            if self.numfile_timesteps == 1:
+                for month in range(12):
+                    mfile = f"{self.datapath}/{self.casename}.{self.ftype_name}.{year:04d}-{month + 1:02d}.nc"
+                    outd_here = xr.open_dataset(mfile, engine="netcdf4")[varlist_direct]
+                    outd_here = self.add_composite_variables(outd_here, varlist_composite)
+                    outd_here = multiply_by_fates_fraction(outd_here)
+                    if not outd:
+                        outd = outd_here
+                    else:
+                        outd = xr.concat([outd, outd_here], dim="time")
+            elif self.numfile_timesteps == 12:
+                mfile = glob.glob(f"{self.datapath}/{self.casename}.{self.ftype_name}.{year:04d}-*.nc")[0]
                 outd_here = xr.open_dataset(mfile, engine="netcdf4")[varlist_direct]
                 outd_here = self.add_composite_variables(outd_here, varlist_composite)
                 outd_here = multiply_by_fates_fraction(outd_here)
-                # print(outd_here)
-                # sys.exit(4)
                 if not outd:
                     outd = outd_here
                 else:
                     outd = xr.concat([outd, outd_here], dim="time")
-                
+            else:
+                raise ValueError(f"Number of timesteps in file {self.numfile_timesteps} not supported")
+                    
         outd = outd.mean(dim="time")
         return outd
     
@@ -315,17 +337,25 @@ class XesmfCLMFatesDiagnostics:
 
         for year in year_range:
             outd_yr = None
-            for month in range(12):                         
-                mfile = f"{self.datapath}/{self.casename}.{self.ftype_name}.{year:04d}-{month + 1:02d}.nc"
-                outd_here = xr.open_dataset(mfile, engine="netcdf4")[varlist_direct]
-                outd_here = self.add_composite_variables(outd_here, varlist_composite)
-                outd_here = multiply_by_fates_fraction(outd_here)
-                # print(outd_here)
-                # sys.exit(4)
-                if not outd_yr:
-                    outd_yr = outd_here
-                else:
-                    outd_yr = xr.concat([outd_yr, outd_here], dim="time")
+            if self.numfile_timesteps == 1:
+                for month in range(12):                         
+                    mfile = f"{self.datapath}/{self.casename}.{self.ftype_name}.{year:04d}-{month + 1:02d}.nc"
+                    outd_here = xr.open_dataset(mfile, engine="netcdf4")[varlist_direct]
+                    outd_here = self.add_composite_variables(outd_here, varlist_composite)
+                    outd_here = multiply_by_fates_fraction(outd_here)
+                    # print(outd_here)
+                    # sys.exit(4)
+                    if not outd_yr:
+                        outd_yr = outd_here
+                    else:
+                        outd_yr = xr.concat([outd_yr, outd_here], dim="time")
+            elif self.numfile_timesteps == 12:
+                mfile = glob.glob(f"{self.datapath}/{self.casename}.{self.ftype_name}.{year:04d}-*.nc")[0]
+                outd_yr = xr.open_dataset(mfile, engine="netcdf4")[varlist_direct]
+                outd_yr = self.add_composite_variables(outd_yr, varlist_composite)
+                outd_yr = multiply_by_fates_fraction(outd_yr)
+            else:
+                raise ValueError(f"Number of timesteps in file {self.numfile_timesteps} not supported")
             outd_yr = outd_yr.mean(dim="time")
             if not outd:
                 outd = outd_yr
@@ -400,24 +430,40 @@ class XesmfCLMFatesDiagnostics:
         varlist_direct, varlist_composite = self.fix_varlists_for_composite_variables(varlist)
         
         for year in year_range:
-            for monthincr in range(3):
+            if self.numfile_timesteps == 1:
+                for monthincr in range(3):
 
-                month = monthincr + season * 3
-                if month == 0:
-                    month = 12
-                # print(f"Season: {season}, monthincr: {monthincr}, month: {monthincr}")
-                mfile = (
-                    f"{self.datapath}/{self.casename}.{self.ftype_name}.{year:04d}-{month:02d}.nc"
-                )
+                    month = monthincr + season * 3
+                    if month == 0:
+                        month = 12
+                    # print(f"Season: {season}, monthincr: {monthincr}, month: {monthincr}")
+                    mfile = (
+                        f"{self.datapath}/{self.casename}.{self.ftype_name}.{year:04d}-{month:02d}.nc"
+                    )
+                    outd_here = xr.open_dataset(mfile, engine="netcdf4")[varlist_direct]
+                    outd_here = self.add_composite_variables(outd_here, varlist_composite)
+                    outd_here = multiply_by_fates_fraction(outd_here)
+                    # print(outd_here)
+                    # sys.exit(4)
+                    if not outd:
+                        outd = outd_here
+                    else:
+                        outd = xr.concat([outd, outd_here], dim="time")
+            elif self.numfile_timesteps == 12:
+                mfile = glob.glob(f"{self.datapath}/{self.casename}.{self.ftype_name}.{year:04d}-*.nc")[0]
                 outd_here = xr.open_dataset(mfile, engine="netcdf4")[varlist_direct]
+                if season == 0:
+                    outd_here = xr.concat([outd_here.isel(time=slice(0,2)), outd_here.isel(time=-1)], dim="time")
+                else:
+                    outd_here = outd_here.isel(time=slice(season * 3-1, season * 3 + 2))
                 outd_here = self.add_composite_variables(outd_here, varlist_composite)
                 outd_here = multiply_by_fates_fraction(outd_here)
-                # print(outd_here)
-                # sys.exit(4)
                 if not outd:
                     outd = outd_here
                 else:
                     outd = xr.concat([outd, outd_here], dim="time")
+            else:
+                raise ValueError(f"Number of timesteps in file {self.numfile_timesteps} not supported")
         outd = outd.mean(dim="time")
         return outd
 
@@ -430,17 +476,29 @@ class XesmfCLMFatesDiagnostics:
         for month in range(12):
             outd = None
             for year in year_range:
-                # print(f"Season: {season}, monthincr: {monthincr}, month: {monthincr}")
-                mfile = f"{self.datapath}/{self.casename}.{self.ftype_name}.{year:04d}-{month+1:02d}.nc"
-                outd_here = xr.open_dataset(mfile, engine="netcdf4")[varlist_direct]
-                outd_here = self.add_composite_variables(outd_here, varlist_composite)
-                outd_here = multiply_by_fates_fraction(outd_here)
-                # print(outd_here)
-                # sys.exit(4)
-                if not outd:
-                    outd = outd_here
-                else:
-                    outd = xr.concat([outd, outd_here], dim="time")
+                if self.numfile_timesteps == 1:
+                    # print(f"Season: {season}, monthincr: {monthincr}, month: {monthincr}")
+                    mfile = f"{self.datapath}/{self.casename}.{self.ftype_name}.{year:04d}-{month+1:02d}.nc"
+                    outd_here = xr.open_dataset(mfile, engine="netcdf4")[varlist_direct]
+                    outd_here = self.add_composite_variables(outd_here, varlist_composite)
+                    outd_here = multiply_by_fates_fraction(outd_here)
+                    # print(outd_here)
+                    # sys.exit(4)
+                    if not outd:
+                        outd = outd_here
+                    else:
+                        outd = xr.concat([outd, outd_here], dim="time")
+                elif self.numfile_timesteps == 12:
+                    mfile = glob.glob(f"{self.datapath}/{self.casename}.{self.ftype_name}.{year:04d}-*.nc")[0]
+                    outd_here = xr.open_dataset(mfile, engine="netcdf4")[varlist_direct].isel(time=month)
+                    outd_here = self.add_composite_variables(outd_here, varlist_composite)
+                    outd_here = multiply_by_fates_fraction(outd_here)
+                    # print(outd_here)
+                    # sys.exit(4)
+                    if not outd:
+                        outd = outd_here
+                    else:
+                        outd = xr.concat([outd, outd_here], dim="time")
             outd = outd.mean(dim="time", keepdims=True)
             if outd_months is None:
                 outd_months = outd
@@ -484,7 +542,7 @@ class XesmfCLMFatesDiagnostics:
         self, outd, varlist, region_df, year_range_string, varsetname, ilamb_cfgs = None
     ):
         print("making regional seasonal cycle plots")
-        print(ilamb_cfgs)
+        #print(ilamb_cfgs)
         self.add_to_unit_dict(varlist)
         figs = []
         rownum = int(np.ceil(len(varlist) / 2))
@@ -565,8 +623,8 @@ class XesmfCLMFatesDiagnostics:
                 }
             )
         outd = self.get_monthly_climatology_data(year_range=year_range, varlist=varlist)
-        print(varsetname)
-        print(varlist)
+        #print(varsetname)
+        #print(varlist)
         self.make_timeseries_plots_for_varlist(
             outd,
             varlist=varlist,
@@ -643,7 +701,7 @@ class XesmfCLMFatesDiagnostics:
     def get_year_ranges_for_comparison(self, other, year_range_in=None):
         year_range_avail = self.get_year_range(get_full_range=True)
         year_range_other_avail = other.get_year_range(get_full_range=True)
-        print(year_range_in)
+        #print(year_range_in)
         if year_range_in is None:
             year_range_in = {"compare_from_end":20}
         if "year_range" in year_range_in:
@@ -767,7 +825,9 @@ class XesmfCLMFatesDiagnostics:
         year_start = int(self.filelist[0].split(".")[-2].split("-")[0])
         year_end = int(self.filelist[-1].split(".")[-2].split("-")[0])
         files_missing = False
-        if len(self.filelist) < (year_end - year_start) * 12:
+        print(self.filelist[0])
+        print(len(self.filelist))
+        if len(self.filelist) * self.numfile_timesteps < (year_end - year_start) * 12:
             files_missing = True
         return year_start, year_end, files_missing
 
