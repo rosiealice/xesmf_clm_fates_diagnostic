@@ -70,7 +70,14 @@ class XesmfCLMFatesDiagnostics:
     regridding variables to plot up in diagnostics etc
     """
     def __init__(
-        self, datapath, weightfile, pamfile, casename=None, region_def=None, outdir = None,
+        self, 
+        datapath, 
+        weightfile, 
+        pamfile, 
+        casename=None, 
+        region_def=None, 
+        outdir = None,
+        plot_annotation_name=None
     ):
         self.datapath = datapath
         self.weightfile = weightfile
@@ -86,6 +93,10 @@ class XesmfCLMFatesDiagnostics:
             self.casename = ".".join(self.filelist[0].split("/")[-1].split(".")[:-4])
         else:
             self.casename = casename
+        if plot_annotation_name is None:
+            self.plot_annotation_name = self.casename
+        else:
+            self.plot_annotation_name = plot_annotation_name
         self.region_def = region_def
         if outdir is None:
             outdir = "figs/"
@@ -390,18 +401,21 @@ class XesmfCLMFatesDiagnostics:
                     make_3D_plot(
                         bias = to_plot,
                         figname=f"{self.outdir}/clim_maps/{plottype}/{self.casename}_{plottype}_{var}_{year_range[0]:04d}-{year_range[-1]:04d}", 
+                        figtitle = f"{self.plot_annotation_name} - {plottype} {var} [{self.unit_dict[var]}]",
                         )
                     make_bias_plot(
                         to_plot.sum(dim=list(self.var_pams["3D_vars"][var]))*landmask,
                         f"{self.outdir}/clim_maps/{plottype}/{self.casename}_{plottype}_{var}_sum_{year_range[0]:04d}-{year_range[-1]:04d}",
-                        xlabel = f"{plottype} {var} [{self.unit_dict[var]}]"
+                        xlabel = f"{plottype} {var} [{self.unit_dict[var]}]", 
+                        figtitle = f"{self.plot_annotation_name} - {plottype} {var} [{self.unit_dict[var]}]",
                     )
                 else:
                     make_bias_plot(
                         to_plot,
                         f"{self.outdir}/clim_maps/{plottype}/{self.casename}_{plottype}_{var}_{year_range[0]:04d}-{year_range[-1]:04d}",
                         xlabel = f"{plottype} {var} [{self.unit_dict[var]}]",
-                        logscale=logscale
+                        logscale=logscale,
+                        figtitle = f"{self.plot_annotation_name} - {plottype} {var} [{self.unit_dict[var]}]",
                     )
 
     def get_seasonal_data(self, season, year_range, varlist=None):
@@ -794,7 +808,8 @@ class XesmfCLMFatesDiagnostics:
                 yminv = yminv,
                 ymaxv = ymaxv,
                 xlabel = f"{season} {var} [{unit_to_print}]",
-                logscale=logscale
+                logscale=logscale,
+                figtitle = self.plot_annotation_name
             )
             make_bias_plot(
                 to_plot_other,
@@ -803,13 +818,15 @@ class XesmfCLMFatesDiagnostics:
                 yminv = yminv,
                 ymaxv = ymaxv,
                 xlabel = f"{season} {var} [{unit_to_print}]",
-                logscale=logscale
+                logscale=logscale,
+                figtitle = other.plot_annotation_name
             )
             make_bias_plot(
                 to_plot - to_plot_other,
                 f"{self.casename} - {other.casename}",
                 ax=axs[2], 
                 cmap = "PuOr_r",
+                figtitle = f"{self.plot_annotation_name} - {self.plot_annotation_name}",
             )
             rmse, bias = calculate_rmse_from_bias(to_plot - to_plot_other)
             fig.suptitle(f"{season_name} {var} ({self.unit_dict[var]}) (years {year_range_str})", size = "xx-large", y=0.8)
@@ -952,7 +969,8 @@ class XesmfCLMFatesDiagnostics:
                     yminv = yminv,
                     ymaxv = ymaxv,
                     xlabel = f"{season} {varname_mod} [{unit_to_print}]",
-                    logscale=logscale
+                    logscale=logscale,
+                    figtitle = self.plot_annotation_name
                 )
                 make_bias_plot(
                     to_plot_obs,
@@ -961,7 +979,7 @@ class XesmfCLMFatesDiagnostics:
                     yminv = yminv,
                     ymaxv = ymaxv,
                     xlabel = f"{season} {varname_mod} [{unit_to_print}]",
-                    logscale=logscale
+                    logscale=logscale,
                 )
                 make_bias_plot(
                     to_plot - to_plot_obs,
@@ -969,7 +987,8 @@ class XesmfCLMFatesDiagnostics:
                     yminv = negdiffrange,
                     ymaxv = diffrange,
                     ax=axs[2], 
-                    cmap = "PuOr_r"
+                    cmap = "PuOr_r",
+                    figtitle = f"{self.plot_annotation_name} - {obs_dataset}",
                 )
                 #rmse, bias = calculate_rmse_from_bias(to_plot - to_plot_obs)
                 test = calculate_rmse_from_bias(to_plot - to_plot_obs)

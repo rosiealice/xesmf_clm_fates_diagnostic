@@ -7,7 +7,13 @@ import xesmf
 from matplotlib.colors import LogNorm
 from  .misc_help_functions import get_unit_conversion_and_new_label
 
-def make_3D_plot(bias,figname,yminv=None,ymaxv=None):
+def make_3D_plot(
+        bias,
+        figname,
+        yminv=None,
+        ymaxv=None,
+        figtitle=None
+        ):
 
     dims = list(bias.dims)
     extra_dim = [d for d in dims if d not in ["lat", "lon"]][0]
@@ -18,7 +24,10 @@ def make_3D_plot(bias,figname,yminv=None,ymaxv=None):
     fig, axs = plt.subplots(nrows, ncols, figsize=(4*ncols, 3*nrows), constrained_layout=True)
     axs = axs.flatten()
     ims = []
-    fs=fig.suptitle(figname.split("/")[-1])
+    if figtitle is not None:
+        fs=fig.suptitle(figtitle)
+    else:
+        fs=fig.suptitle(figname.split("/")[-1])
     cfs = fs.get_fontsize()
     fs.set_fontsize(cfs * 1.3)
     plotted_axes = []
@@ -42,7 +51,17 @@ def make_3D_plot(bias,figname,yminv=None,ymaxv=None):
     fig.savefig(fignamefull,bbox_inches='tight')
 
                     
-def make_bias_plot(bias,figname,yminv=None,ymaxv=None,cmap = 'gist_earth',ax = None, xlabel=None, logscale=False):
+def make_bias_plot(
+        bias,
+        figname,
+        yminv=None,
+        ymaxv=None,
+        cmap = 'gist_earth',
+        ax = None, 
+        xlabel=None, 
+        logscale=False,
+        figtitle=None
+        ):
     # Use gist_earth for absolute maps
 
     print_to_file = False
@@ -94,7 +113,10 @@ def make_bias_plot(bias,figname,yminv=None,ymaxv=None,cmap = 'gist_earth',ax = N
         ax.clear()
         
     ax.set_title('')
-    ax.set_title(figname.split("/")[-1])
+    if figtitle is not None:
+        ax.set_title(figtitle)
+    else:
+        ax.set_title(figname.split("/")[-1])
 
     if xlabel is None:
         ax.set_xlabel('')
