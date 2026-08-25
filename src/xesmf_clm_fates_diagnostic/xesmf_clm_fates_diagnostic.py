@@ -826,7 +826,7 @@ class XesmfCLMFatesDiagnostics:
                 f"{self.casename} - {other.casename}",
                 ax=axs[2], 
                 cmap = "PuOr_r",
-                figtitle = f"{self.plot_annotation_name} - {self.plot_annotation_name}",
+                figtitle = f"{self.plot_annotation_name} - {other.plot_annotation_name}",
             )
             rmse, bias = calculate_rmse_from_bias(to_plot - to_plot_other)
             fig.suptitle(f"{season_name} {var} ({self.unit_dict[var]}) (years {year_range_str})", size = "xx-large", y=0.8)
