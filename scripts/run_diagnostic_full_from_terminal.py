@@ -15,12 +15,14 @@ standard_run_dict = {
     "compare": None,
     "year_range_compare": None,
     "compare_weight": None,
+    "fig_title": None,
+    "fig_title_compare": None, 
 }
 
 run_dict_optional_arguments = {
     "compare_seasonal": False,
     "mute_trend": False,
-    "mute_maps": False  
+    "mute_maps": False,
 }
 
 def print_help_message():
@@ -56,6 +58,10 @@ def print_help_message():
     print("timeseries trends or variable annual or seasonal single maps, this will")
     print("shave time off the runtime of the diagnostic if they are not of interest to you")
     print("Adds seasonal comparison plots for both observations and comparison to other model output")
+    print("fig_title=title_string")
+    print("If supplied, this string will be used in the title of all figures instead of the full casename")
+    print("fig_title_compare=title_string")
+    print("If supplied, this string will be used in the title for the comparison run instead of its full casename")
     print(f"python {os.path.dirname(__file__)}/{os.path.basename(__file__)} --help will reiterate these instructions")
     sys.exit(4)
 
@@ -68,6 +74,9 @@ def read_optional_arguments(arguments):
         arg_val = arg.split("=")[-1] 
         print(arg_key)
         print(arg_val)
+        if arg_key in ["fig_title", "fig_title_compare"]:
+            run_dict[arg_key] = arg_val
+            continue
         if arg_key in run_dict:
             if not os.path.exists(arg_val):
                 print(f"Invalid path {arg_val} for {arg_key} will be ignored")
@@ -144,6 +153,7 @@ diagnostic = XesmfCLMFatesDiagnostics(
     run_dict["pamfile"],
     outdir = run_dict["outpath"],
     region_def="region_def_improved.nc",
+    plot_annotation_name = run_dict["fig_title"],
 )
 
 print("Standard diagnostics:")
@@ -166,6 +176,7 @@ if not run_dict["compare"] is None:
         run_dict["compare_weight"],
         run_dict["pamfile"],
         outdir = run_dict["outpath"],
+        plot_annotation_name = run_dict["fig_title_compare"],
     )
 
     diagnostic.make_combined_changeplots(diasgnostic_other, year_range_in=run_dict["year_range_compare"], ilamb_cfgs = ilamb_cfg)
