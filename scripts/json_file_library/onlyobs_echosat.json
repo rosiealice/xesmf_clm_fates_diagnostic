@@ -1,0 +1,23 @@
+{
+    "VAR_LIST_MAIN" : [
+        "TLAI",
+        "TOTSOMC_1m" ,
+	"FATES_LAI",
+    "FATES_BA_WEIGHTED_HEIGHT",
+    "HTOP",
+	"FATES_MEAN_95PCTILE_HEIGHT"
+    ],
+
+    "SEASONAL_VARSETS":
+    {},
+    
+    "COMPARE_VARIABLES" : [],
+    
+    "OBSERVATION_COMPARISON" : {
+        "lai": ["MODIS", "AVHRR"],
+        "TOTSOMC_1m": ["HWSD_M", "NCSCDV22"],
+	"HTOP": ["ECHOSAT"],
+    "FATES_MEAN_95PCTILE_HEIGHT": ["GEDI"]
+    },
+    "LOG_PLOT" : []
+}
