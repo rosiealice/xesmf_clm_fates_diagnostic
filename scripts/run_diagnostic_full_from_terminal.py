@@ -132,7 +132,7 @@ if len(glob.glob(f"{run_path}*.nc")) < 1:
     print(f"path {run_path} contains no netcdf files")
     print_help_message()
 
-ilamb_cfg = ilamb_configurations.IlambConfigurations("../tests/test-data/ilamb_CLMFATES.cfg")
+ilamb_cfg = ilamb_configurations.IlambConfigurations("../tests/test-data/ilamb_CLMFATES_TRENDY.cfg")
 print(ilamb_cfg.configurations["FATES_FIRE_CLOSS"].obsdatasets)
 #print(ilamb_cfg.configurations["pr"].obsdatasets)
 

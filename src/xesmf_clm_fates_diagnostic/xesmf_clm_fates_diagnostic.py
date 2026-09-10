@@ -14,7 +14,7 @@ warnings.filterwarnings("ignore")
 
 import cartopy.crs as ccrs
 
-from .plotting_methods import make_generic_regridder, regrid_se_data, make_bias_plot, make_regridder_regular_to_coarsest_resolution, make_3D_plot
+from .plotting_methods import get_bias_colormap, make_generic_regridder, regrid_se_data, make_bias_plot, make_regridder_regular_to_coarsest_resolution, make_3D_plot
 from .infrastructure_help_functions import setup_nested_folder_structure_from_dict, read_pam_file#, clean_empty_folders_in_tree
 from  .misc_help_functions import get_unit_conversion_and_new_label, make_regridding_target_from_weightfile, get_unit_conversion_from_string, do_light_unit_string_conversion, SEASONS, calculate_rmse_from_bias
 
@@ -82,6 +82,7 @@ class XesmfCLMFatesDiagnostics:
         self.datapath = datapath
         self.weightfile = weightfile
         self.var_pams = read_pam_file(pamfile)
+        self.bias_cmap = get_bias_colormap(self.var_pams.get("BIAS_CMAP", "PuOr_r"))
         print(self.var_pams)
         #sys.exit(4)
         self.filelist, self.ftype_name = self.get_clm_h0_filelist()
@@ -825,7 +826,7 @@ class XesmfCLMFatesDiagnostics:
                 to_plot - to_plot_other,
                 f"{self.casename} - {other.casename}",
                 ax=axs[2], 
-                cmap = "PuOr_r",
+                cmap = self.bias_cmap,
                 figtitle = f"{self.plot_annotation_name} - {other.plot_annotation_name}",
             )
             rmse, bias = calculate_rmse_from_bias(to_plot - to_plot_other)
@@ -987,7 +988,7 @@ class XesmfCLMFatesDiagnostics:
                     yminv = negdiffrange,
                     ymaxv = diffrange,
                     ax=axs[2], 
-                    cmap = "PuOr_r",
+                    cmap = self.bias_cmap,
                     figtitle = f"{self.plot_annotation_name} - {obs_dataset}",
                 )
                 #rmse, bias = calculate_rmse_from_bias(to_plot - to_plot_obs)

@@ -137,7 +137,7 @@ class IlambConfigurations:
         start_index = int(np.max(time_len-240, 0))
         outd_gn = dataset[varname].isel(time = slice(start_index, time_len))
         if "missing" in dataset[varname].attrs.keys():
-            print(f"{varname} has missing with value {dataset[varname].attrs["missing"]}")
+            print(f"{varname} has missing with value {dataset[varname].attrs['missing']}")
         outd_gn = outd_gn.where(outd_gn < 1e9)
 
         monthly_means = outd_gn.groupby('time.month').mean('time')
@@ -180,7 +180,7 @@ class IlambConfigurations:
             start_index = np.max(time_len-clim_length, 0) -1
             outd_gn = dataset[varname].isel(time = slice(start_index, time_len)).mean(dim="time")
         if "missing" in dataset[varname].attrs.keys():
-            print(f"{varname} has missing with value {dataset[varname].attrs["missing"]}")
+            print(f"{varname} has missing with value {dataset[varname].attrs['missing']}")
         outd_gn = outd_gn.where(outd_gn < 1e9)
         regridder = make_regular_grid_regridder(outd_gn, regrid_target)
         output = regridder(outd_gn)

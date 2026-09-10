@@ -70,5 +70,5 @@ lai45deg['lat']=lai45deg.lat*-1
 
 bias_gpp = ds_out_gpp - gpp45deg
 bias_lai = ds_out_lai - lai45deg
-plotting_methods.make_bias_plot(bias_gpp, f"gpp_output_{case_name}_{year}_bias_fluxcom_map.png", -3, 3)
-plotting_methods.make_bias_plot(bias_lai, f"lai_output_{case_name}_{year}_bias_modis_map.png", -3, 3)
+plotting_methods.make_bias_plot(bias_gpp, f"gpp_output_{case_name}_{year}_bias_fluxcom_map.png", -3, 3, cmap=plotting_methods.get_bias_colormap())
+plotting_methods.make_bias_plot(bias_lai, f"lai_output_{case_name}_{year}_bias_modis_map.png", -3, 3, cmap=plotting_methods.get_bias_colormap())

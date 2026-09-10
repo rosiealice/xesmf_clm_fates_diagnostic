@@ -4,8 +4,47 @@ import numpy as np
 import xarray as xr
 import math
 import xesmf
-from matplotlib.colors import LogNorm
+from matplotlib.colors import LinearSegmentedColormap, LogNorm, hsv_to_rgb, rgb_to_hsv
 from  .misc_help_functions import get_unit_conversion_and_new_label
+
+
+def _make_ilamb_bias_colormap():
+    """Reproduce ILAMB's red-white-blue bias colormap."""
+    value = 0.8
+    transition = 0.2 / 2
+    red = hsv_to_rgb(rgb_to_hsv(np.array([1.0, 0.0, 0.0])) * [1.0, 1.0, value])
+    blue = hsv_to_rgb(rgb_to_hsv(np.array([0.0, 0.0, 1.0])) * [1.0, 1.0, value])
+    segments = {
+        "red": (
+            (0.0, 0.0, blue[0]),
+            (0.5 - transition, 1.0, 1.0),
+            (0.5 + transition, 1.0, 1.0),
+            (1.0, red[0], 0.0),
+        ),
+        "green": (
+            (0.0, 0.0, blue[1]),
+            (0.5 - transition, 1.0, 1.0),
+            (0.5 + transition, 1.0, 1.0),
+            (1.0, red[1], 0.0),
+        ),
+        "blue": (
+            (0.0, 0.0, blue[2]),
+            (0.5 - transition, 1.0, 1.0),
+            (0.5 + transition, 1.0, 1.0),
+            (1.0, red[2], 0.0),
+        ),
+    }
+    return LinearSegmentedColormap("bias", segments)
+
+
+ILAMB_CMAP = _make_ilamb_bias_colormap()
+
+
+def get_bias_colormap(name="PuOr_r"):
+    """Resolve a bias colormap name or the built-in ILAMB colormap."""
+    if name == "ilamb_cmap":
+        return ILAMB_CMAP
+    return plt.get_cmap(name)
 
 def make_3D_plot(
         bias,
